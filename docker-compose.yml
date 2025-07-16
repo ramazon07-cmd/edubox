@@ -1,32 +1,67 @@
-version: '3.9'
+version: '3'
 
 services:
   db:
-    image: postgres
-    env_file: .env
+    image: postgres:14
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: always
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=edubox
+      
+  migrate:
+    build: .
+    command: ./migrate.sh
+    volumes:
+      - .:/code
+    depends_on:
+      - db
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
+      - SECRET_KEY=django-insecure-development-key-only-for-testing
+      - DEBUG=True
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - POSTGRES_DB=edubox
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
 
   web:
     build: .
-    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/code
+      - static_volume:/code/staticfiles
+      - media_volume:/code/media
     ports:
       - "8000:8000"
-    env_file: .env
     depends_on:
-      - db
+      - migrate
       - redis
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
+      - SECRET_KEY=django-insecure-development-key-only-for-testing
+      - DEBUG=True
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - POSTGRES_DB=edubox
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - EMAIL_HOST_USER=test@example.com
+      - EMAIL_HOST_PASSWORD=test_password
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    restart: always
 
   redis:
     image: redis:alpine
-    ports:
-      - "6379:6379"
+    volumes:
+      - redis_data:/data
     restart: always
 
   celery:
@@ -35,9 +70,26 @@ services:
     volumes:
       - .:/code
     depends_on:
-      - web
+      - migrate
       - redis
-    env_file: .env
+    environment:
+      - SECRET_KEY=django-insecure-development-key-only-for-testing
+      - DEBUG=True
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+      - POSTGRES_DB=edubox
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - EMAIL_HOST_USER=test@example.com
+      - EMAIL_HOST_PASSWORD=test_password
+      - CELERY_BROKER_URL=redis://redis:6379/0
+    restart: always
+
+
 
 volumes:
   postgres_data:
+  redis_data:
+  static_volume:
+  media_volume:

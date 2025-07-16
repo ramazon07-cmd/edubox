@@ -9,15 +9,19 @@ __pycache__/
 # Virtual environment folder
 venv/
 env/
+.venv/
+.python-version
 
-# Django migrations
-*/migrations/
+# Django migrations - comment this out when you want to commit migrations
+# */migrations/
 
 # Database files
 *.sqlite3
 
-# Static files (agar collectstatic ishlatilsa)
+# Static files
 staticfiles/
+static/
+media/
 
 # IDE va editor fayllari
 .vscode/
@@ -28,8 +32,22 @@ staticfiles/
 # Logs
 *.log
 
-# Docker files (agar kerak bo‘lsa)
+# Docker files
 docker-compose.override.yml
+.docker/
 
-# MacOS fayllari
+# Coverage reports
+.coverage
+htmlcov/
+coverage.xml
+
+# OS specific files
 .DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Certificate files
+*.pem
+*.key
+*.crt
