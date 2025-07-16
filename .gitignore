@@ -1,0 +1,35 @@
+# Python bytecode files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables
+.env
+
+# Virtual environment folder
+venv/
+env/
+
+# Django migrations
+*/migrations/
+
+# Database files
+*.sqlite3
+
+# Static files (agar collectstatic ishlatilsa)
+staticfiles/
+
+# IDE va editor fayllari
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Docker files (agar kerak bo‘lsa)
+docker-compose.override.yml
+
+# MacOS fayllari
+.DS_Store
