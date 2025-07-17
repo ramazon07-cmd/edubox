@@ -1,6 +1,5 @@
 # EduBox - Modern Learning Platform
 
-[![Django CI/CD Pipeline](https://github.com/yourusername/edubox/actions/workflows/django-ci.yml/badge.svg)](https://github.com/yourusername/edubox/actions/workflows/django-ci.yml)
 [![codecov](https://codecov.io/gh/yourusername/edubox/branch/main/graph/badge.svg)](https://codecov.io/gh/yourusername/edubox)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
