@@ -1,38 +1,9 @@
-version: '3'
+version: '3.9'
 
 services:
-  db:
-    image: postgres:14
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    restart: always
-    environment:
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=edubox
-      
-  migrate:
-    build: .
-    command: ./migrate.sh
-    volumes:
-      - .:/code
-    depends_on:
-      - db
-    environment:
-      - PYTHONUNBUFFERED=1
-      - PYTHONDONTWRITEBYTECODE=1
-      - SECRET_KEY=django-insecure-development-key-only-for-testing
-      - DEBUG=True
-      - ALLOWED_HOSTS=localhost,127.0.0.1
-      - POSTGRES_DB=edubox
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=5432
-
   web:
     build: .
-    command: python manage.py runserver 0.0.0.0:8000
+    command: gunicorn core.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - .:/code
       - static_volume:/code/staticfiles
@@ -40,21 +11,29 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - migrate
       - redis
     environment:
-      - PYTHONUNBUFFERED=1
-      - PYTHONDONTWRITEBYTECODE=1
-      - SECRET_KEY=django-insecure-development-key-only-for-testing
-      - DEBUG=True
-      - ALLOWED_HOSTS=localhost,127.0.0.1
-      - POSTGRES_DB=edubox
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=5432
-      - EMAIL_HOST_USER=test@example.com
-      - EMAIL_HOST_PASSWORD=test_password
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - DATABASE_URL=${DATABASE_URL}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+    restart: always
+
+  celery:
+    build: .
+    command: celery -A core worker --loglevel=info
+    volumes:
+      - .:/code
+    depends_on:
+      - redis
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - DATABASE_URL=${DATABASE_URL}
       - CELERY_BROKER_URL=redis://redis:6379/0
     restart: always
 
@@ -64,32 +43,22 @@ services:
       - redis_data:/data
     restart: always
 
-  celery:
+  migrate:
     build: .
-    command: celery -A core worker --loglevel=info
+    command: bash -c "python manage.py migrate && python manage.py collectstatic --noinput"
     volumes:
       - .:/code
     depends_on:
-      - migrate
       - redis
     environment:
-      - SECRET_KEY=django-insecure-development-key-only-for-testing
-      - DEBUG=True
-      - ALLOWED_HOSTS=localhost,127.0.0.1
-      - POSTGRES_DB=edubox
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_HOST=db
-      - POSTGRES_PORT=5432
-      - EMAIL_HOST_USER=test@example.com
-      - EMAIL_HOST_PASSWORD=test_password
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY}
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS}
+      - DATABASE_URL=${DATABASE_URL}
       - CELERY_BROKER_URL=redis://redis:6379/0
-    restart: always
-
-
+    restart: "no"
 
 volumes:
-  postgres_data:
-  redis_data:
   static_volume:
   media_volume:
+  redis_data:
