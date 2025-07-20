@@ -13,3 +13,4 @@ pytest-django
 coverage
 flake8
 django-cors-headers
+dj-database-url
